@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.agents
+.codex
+docs
+*.zip
+*.log
+*.tsbuildinfo
