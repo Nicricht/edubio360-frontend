@@ -1,22 +1,29 @@
-# EduBío 360
+# EduBío 360 — Evaluación Parcial 2
 
-Frontend académico para explorar, comparar y orientar decisiones sobre ofertas de Educación Superior en la Región del Biobío.
+Proyecto React para explorar, comparar y orientar decisiones sobre ofertas de Educación Superior en la Región del Biobío. La entrega de la segunda evaluación está en [`ep2/`](ep2/README.md), dentro de esta rama `main`. Los archivos HTML de la primera evaluación se conservan en la raíz como antecedente de la migración.
+
+## Ejecutar el proyecto React
+
+Se requiere Node.js 22 y npm:
+
+```bash
+cd ep2
+npm ci
+npm run dev
+```
+
+Abrir la dirección local indicada por Vite. Para comprobar la entrega:
+
+```bash
+npm run test:coverage
+npm run build
+```
+
+El reporte de cobertura se genera en `ep2/coverage/index.html`. El ERS y el informe de pruebas se encuentran en [`ep2/docs/`](ep2/docs/).
 
 ## Tecnologías
 
-HTML5, CSS, JavaScript, LocalStorage, SessionStorage, Leaflet y OpenStreetMap.
-
-## Ejecución
-
-Abrir la carpeta con Visual Studio Code y ejecutar `index.html` mediante Live Server.
-
-## Evaluación Parcial 2
-
-La migración a React, Vite y TypeScript se encuentra en [`ep2/`](ep2/README.md), dentro de la rama `ep2/react-vite-typescript`. Las páginas HTML, CSS y JavaScript de la primera evaluación permanecen en la raíz del repositorio.
-
-Para iniciar la EP2: `cd ep2`, `npm ci`, `npm run dev`.
-
-Para las pruebas: `npm run test:coverage`. La compilación de producción y la verificación de Docker se pueden revisar en GitHub Actions.
+React, Vite, TypeScript, React Router, Bootstrap, Vitest y React Testing Library. Los datos de la demostración se guardan en LocalStorage y las sesiones por pestaña en SessionStorage. La compilación y los tests se verifican también en GitHub Actions.
 
 ## Accesos de demostración
 
