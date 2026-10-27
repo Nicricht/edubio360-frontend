@@ -3,7 +3,7 @@ name: EP2 React y Docker
 on:
   push:
     branches:
-      - ep2/react-vite-typescript
+      - main
   pull_request:
     paths:
       - 'ep2/**'
