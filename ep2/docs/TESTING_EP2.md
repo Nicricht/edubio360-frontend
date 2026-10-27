@@ -1,6 +1,6 @@
 # Informe de pruebas unitarias y cobertura — EduBío 360
 
-Evaluación Parcial 2 · DSY1104 · 26 de octubre de 2026
+Evaluación Parcial 2 · DSY1104 · 27 de octubre de 2026
 
 ## Índice
 
