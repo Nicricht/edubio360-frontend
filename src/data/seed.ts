@@ -37,7 +37,7 @@ export const seedOfertas: Oferta[] = filas.map((fila, index) => ({
   duracion: fila[6],
   matricula: fila[7],
   arancel: fila[8],
-  imagen: `/img/ofertas/${fila[9]}`,
+  imagen: `${import.meta.env.BASE_URL}img/ofertas/${fila[9]}`,
   modalidad: 'Presencial',
   nivel: fila[0].startsWith('Técnico') || fila[0].startsWith('Analista') ? 'Técnico' : 'Profesional',
   descripcion: 'Oferta de educación superior de la Región del Biobío. Consulta los valores y requisitos actuales con la institución.',

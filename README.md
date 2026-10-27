@@ -6,6 +6,8 @@ Versión React + Vite + TypeScript del frontend de EduBío 360 para la Evaluaci�
 
 ## Instalación y ejecución
 
+La demo publicada en GitHub Pages se abre desde un navegador sin instalar Node.js. Para publicarla, en `Settings > Pages` elegir `GitHub Actions` como origen; el flujo `Publicar demo en GitHub Pages` compila y actualiza el sitio en cada cambio de `main`. Su dirección será `https://nicricht.github.io/edubio360-frontend/`. En esa versión las rutas se muestran después de `/#/` para que funcionen también al recargar la página.
+
 Se requiere Node.js 22 y npm. Desde la raíz del repositorio:
 
 ```bash
