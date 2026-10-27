@@ -86,4 +86,4 @@ Inicio, catálogo, detalle, comparador, mapa, registro, ingreso, panel de estudi
 
 ### 9. Condiciones de entrega
 
-El proyecto se ejecuta desde `ep2/` con `npm ci` y `npm run dev`. La validación técnica considera `npm run build`, `npm run test:coverage` y el flujo de GitHub Actions para construir y comprobar el contenedor Docker. El repositorio debe evidenciar cambios en ramas y aportes identificables del equipo. La defensa individual requiere explicar las decisiones y ejecutar las funciones y pruebas seleccionadas.
+El proyecto se ejecuta desde la raíz del repositorio con `npm ci` y `npm run dev`. La validación técnica considera `npm run build`, `npm run test:coverage` y el flujo de GitHub Actions para construir y comprobar el contenedor Docker. El repositorio debe evidenciar cambios en ramas y aportes identificables del equipo. La defensa individual requiere explicar las decisiones y ejecutar las funciones y pruebas seleccionadas.

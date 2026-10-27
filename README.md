@@ -2,11 +2,11 @@
 
 **DSY1104 · Desarrollo Fullstack II**
 
-Versión React + Vite + TypeScript del frontend de EduBío 360. Las páginas de la primera evaluación están conservadas en la raíz del repositorio. Esta carpeta corresponde a la migración EP2.
+Versión React + Vite + TypeScript del frontend de EduBío 360 para la Evaluación Parcial 2. El proyecto se ejecuta desde la raíz de este repositorio.
 
 ## Instalación y ejecución
 
-Se requiere Node.js 22 y npm. Desde `ep2/`:
+Se requiere Node.js 22 y npm. Desde la raíz del repositorio:
 
 ```bash
 npm ci
@@ -25,7 +25,7 @@ El reporte de cobertura se genera en `coverage/index.html`. La evaluación no ex
 
 ## Docker
 
-Desde `ep2/`, con Docker en funcionamiento:
+Desde la raíz del repositorio, con Docker en funcionamiento:
 
 ```bash
 docker build -t edubio360-ep2 .
@@ -75,6 +75,6 @@ La clave de demostración para los tres roles es `1234`. No se utiliza un sistem
 
 Los valores académicos corresponden a datos de ejemplo e históricos; deben verificarse con cada institución. No existen backend, base de datos remota ni seguridad de servidor. La sesión se guarda por pestaña y los datos se comparten entre pestañas del mismo origen a través de `localStorage`.
 
-La versión React conserva el catálogo, el comparador y los flujos de roles del EP1. El mapa utiliza una vista incrustada de OpenStreetMap por sede, mientras que el HTML original conserva su implementación con Leaflet. Las solicitudes son simuladas y no generan comunicaciones externas.
+La versión React conserva el catálogo, el comparador y los flujos de roles del EP1. El mapa utiliza una vista incrustada de OpenStreetMap por sede. Las solicitudes son simuladas y no generan comunicaciones externas.
 
 Los entregables académicos incluyen el repositorio y su historial de trabajo en ramas, un ZIP del proyecto, el ERS actualizado y el informe de pruebas/cobertura. La explicación y demostración individual se preparan sobre los comandos, componentes y flujos realmente implementados.

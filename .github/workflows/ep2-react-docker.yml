@@ -6,22 +6,26 @@ on:
       - main
   pull_request:
     paths:
-      - 'ep2/**'
+      - 'src/**'
+      - 'public/**'
+      - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'Dockerfile'
+      - 'nginx.conf'
       - '.github/workflows/ep2-react-docker.yml'
 
 jobs:
   pruebas-y-docker:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ep2
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: ep2/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Instalar dependencias
         run: npm ci
       - name: Pruebas y cobertura
@@ -30,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cobertura-ep2
-          path: ep2/coverage/
+          path: coverage/
           retention-days: 14
       - name: Compilar aplicación
         run: npm run build

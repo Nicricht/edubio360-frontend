@@ -46,7 +46,7 @@
 
 ## Preparación antes de la presentación
 
-- Ejecutar `npm ci`, `npm run build`, `npm run test:run` y `npm run test:coverage` en `ep2/`.
+- Ejecutar `npm ci`, `npm run build`, `npm run test:run` y `npm run test:coverage` en la raíz del repositorio.
 - Abrir `coverage/index.html` y tener una terminal visible con las pruebas aprobadas.
 - Comprobar los tres perfiles de demostración: estudiante, orientador y administrador.
 - Verificar en navegador móvil, tableta y escritorio el catálogo, la navegación y los formularios.
