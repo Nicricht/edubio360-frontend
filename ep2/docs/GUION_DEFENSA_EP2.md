@@ -15,7 +15,7 @@
 | 5:00 a 6:00 | Filtrar catálogo y entrar al detalle | Texto, comuna y área, React Router, parámetro `:id` |
 | 6:00 a 7:00 | Mostrar versión móvil y formulario administrativo | Bootstrap, columnas responsive y navegación |
 | 7:00 a 8:30 | Ejecutar `npm run test:run` | Vitest, React Testing Library, jsdom y 78 pruebas |
-| 8:30 a 9:30 | Ejecutar `npm run test:coverage` y abrir `coverage/index.html` | 92,25 % líneas, 82,31 % ramas, 83,01 % funciones; límites de la cobertura |
+| 8:30 a 9:30 | Ejecutar `npm run test:coverage` y abrir `coverage/index.html` | 92,25 % líneas, 82,27 % ramas, 83,01 % funciones; límites de la cobertura |
 | 9:30 a 10:00 | Mostrar los commits de cada integrante | Trabajo con ramas, contribuciones reales y decisiones tomadas |
 
 ## Demostración de pruebas seleccionadas

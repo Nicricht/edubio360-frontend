@@ -284,7 +284,7 @@ Resumen visual obtenido de los resultados reales de Vitest (no es una captura de
 |---|---:|---:|---:|
 | Líneas | 2465 | 2672 | 92.25 % |
 | Sentencias | 2465 | 2672 | 92.25 % |
-| Ramas | 456 | 554 | 82.31 % |
+| Ramas | 455 | 553 | 82.27 % |
 | Funciones | 132 | 159 | 83.01 % |
 
 Se incluyen los módulos funcionales de `src`; se excluyen dependencias, configuraciones, recursos estáticos y `dist`.

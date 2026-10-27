@@ -1,6 +1,6 @@
 # Reporte de cobertura — EduBío 360 EP2
 
-**Fecha:** 26 de octubre de 2026
+**Fecha:** 27 de octubre de 2026
 
 **Comando:** `npm run test:coverage`
 **Proveedor:** v8, mediante Vitest
@@ -8,7 +8,7 @@
 | Métrica | Cobertura |
 |---|---:|
 | Sentencias | 92,25 % |
-| Ramas | 82,31 % |
+| Ramas | 82,27 % |
 | Funciones | 83,01 % |
 | Líneas | 92,25 % |
 
@@ -18,4 +18,4 @@ El reporte HTML detallado se genera en `coverage/index.html`. El archivo `covera
 
 El comportamiento del mapa incrustado y la adaptación visual a distintos dispositivos requieren comprobaciones adicionales en un navegador. El control de acceso es simulado y no constituye seguridad de servidor. La pauta de EP2 no fija un porcentaje mínimo ni solicita JaCoCo.
 
-Se agregó una prueba con `vi.spyOn` y `mockRestore` sobre la persistencia real, además de una prueba de columnas responsivas de Bootstrap. Las ramas no cubiertas incluyen rutas de error, vistas poco recorridas y condiciones de autorización o almacenamiento. Una cobertura de 82,31 % de ramas no implica que el 100 % de los escenarios esté verificado.
+Se agregó una prueba con `vi.spyOn` y `mockRestore` sobre la persistencia real, además de una prueba de columnas responsivas de Bootstrap. Las ramas no cubiertas incluyen rutas de error, vistas poco recorridas y condiciones de autorización o almacenamiento. Una cobertura de 82,27 % de ramas no implica que el 100 % de los escenarios esté verificado.
