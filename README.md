@@ -1,42 +1,80 @@
 # EduBío 360 — Evaluación Parcial 2
 
-Proyecto React para explorar, comparar y orientar decisiones sobre ofertas de Educación Superior en la Región del Biobío. La entrega de la segunda evaluación está en [`ep2/`](ep2/README.md), dentro de esta rama `main`. Los archivos HTML de la primera evaluación se conservan en la raíz como antecedente de la migración.
+**DSY1104 · Desarrollo Fullstack II**
 
-## Ejecutar el proyecto React
+Versión React + Vite + TypeScript del frontend de EduBío 360. Las páginas de la primera evaluación están conservadas en la raíz del repositorio. Esta carpeta corresponde a la migración EP2.
 
-Se requiere Node.js 22 y npm:
+## Instalación y ejecución
+
+Se requiere Node.js 22 y npm. Desde `ep2/`:
 
 ```bash
-cd ep2
 npm ci
 npm run dev
 ```
 
-Abrir la dirección local indicada por Vite. Para comprobar la entrega:
+Abrir la dirección indicada por Vite, habitualmente `http://localhost:5173`.
 
 ```bash
-npm run test:coverage
 npm run build
+npm run test:run
+npm run test:coverage
 ```
 
-El reporte de cobertura se genera en `ep2/coverage/index.html`. El ERS y el informe de pruebas se encuentran en [`ep2/docs/`](ep2/docs/).
+El reporte de cobertura se genera en `coverage/index.html`. La evaluación no exige un porcentaje fijo de cobertura.
 
-## Tecnologías
+## Docker
 
-React, Vite, TypeScript, React Router, Bootstrap, Vitest y React Testing Library. Los datos de la demostración se guardan en LocalStorage y las sesiones por pestaña en SessionStorage. La compilación y los tests se verifican también en GitHub Actions.
+Desde `ep2/`, con Docker en funcionamiento:
 
-## Accesos de demostración
+```bash
+docker build -t edubio360-ep2 .
+docker run --rm -p 8080:80 edubio360-ep2
+```
 
-- Estudiante: `estudiante@duoc.cl` / `1234`
-- Orientador: `orientador@duoc.cl` / `1234`
-- Administrador: `admin@duoc.cl` / `1234`
+Abrir `http://localhost:8080`. El contenedor usa Nginx y permite acceder directamente a rutas de React Router. El flujo de GitHub Actions `EP2 React y Docker` verifica la compilación, los tests y la respuesta HTTP del contenedor al actualizar la rama de EP2.
 
-## Flujo principal
+## Vistas y funcionalidades
 
-El visitante puede explorar el catálogo, revisar detalles, comparar ofertas equivalentes entre instituciones y consultar el mapa. Para solicitar orientación debe iniciar sesión como estudiante. El orientador puede tomar solicitudes, aceptar o reprogramar la atención, registrar observaciones y finalizarla. El administrador gestiona usuarios, roles y ofertas académicas.
+| Vista | Ruta | Funciones |
+|---|---|---|
+| Inicio | `/` | Presentación y ofertas destacadas |
+| Catálogo | `/carreras` | 21 ofertas originales, búsqueda, filtro de área y comuna |
+| Detalle | `/carreras/:id` | Información y acceso a comparación/orientación |
+| Comparación | `/comparar` | Hasta 3 carreras de un mismo grupo |
+| Mapa | `/mapa` | Selección de las cinco sedes, mapa y acceso a catálogo filtrado |
+| Registro e ingreso | `/registro`, `/login` | Formularios validados y sesiones simuladas por pestaña |
+| Estudiante | `/estudiante` | Panel, perfil, solicitudes, historial, notificaciones |
+| Orientación | `/solicitar` | Envío de solicitud, motivo y fecha preferida |
+| Orientador | `/orientador` | Solicitudes disponibles, asignación, gestión y resultados |
+| Administración | `/admin` | CRUD de ofertas y usuarios, consulta de solicitudes |
+| Institucional | `/nosotros`, `/contacto`, `/novedades` | Información, consultas y artículos |
 
-## Demostración de roles
+Los accesos de demostración mantienen los correos de EP1:
 
-Usa pestañas del mismo navegador y la misma dirección (incluido el puerto). Inicia sesión como estudiante en una y como orientador en otra: las solicitudes y notificaciones se actualizan entre ambas. Los datos se guardan en LocalStorage y las sesiones por pestaña en SessionStorage; no se comparten entre navegadores o equipos.
+- Estudiante: `estudiante@duoc.cl`
+- Orientador: `orientador@duoc.cl`
+- Administrador: `admin@duoc.cl`
 
-Las tarjetas de cada panel abren los listados correspondientes. Las solicitudes canceladas y atendidas se conservan, y los avisos leídos pueden consultarse nuevamente. El administrador puede revisar todas las solicitudes desde su panel; el orientador consulta el catálogo, toma solicitudes disponibles y gestiona las asignadas a su cuenta.
+La clave de demostración para los tres roles es `1234`. No se utiliza un sistema real de autenticación ni se deben ingresar credenciales personales.
+
+## Componentes y patrón
+
+- `src/components/atoms`: elementos básicos como campos, marca y precio.
+- `src/components/molecules`: tarjetas y estados de listados.
+- `src/components/organisms`: encabezado, pie y formularios completos.
+- `src/pages`: vistas accesibles por React Router.
+- `src/context`: datos, sesión y seguimiento de orientación con `useState`.
+- `src/services`: repositorios de ofertas/usuarios, sesiones y solicitudes de orientación.
+- `src/data`: 21 ofertas históricas y cuentas de ejemplo migradas de EP1.
+- `src/utils`: filtros y validaciones independientes.
+
+**Atomic Design** organiza la interfaz, mientras que el patrón **Repository** separa la persistencia de los componentes. Las operaciones CRUD de ofertas y usuarios se guardan localmente, y las solicitudes y notificaciones se almacenan también en el navegador.
+
+## Alcance y precauciones
+
+Los valores académicos corresponden a datos de ejemplo e históricos; deben verificarse con cada institución. No existen backend, base de datos remota ni seguridad de servidor. La sesión se guarda por pestaña y los datos se comparten entre pestañas del mismo origen a través de `localStorage`.
+
+La versión React conserva el catálogo, el comparador y los flujos de roles del EP1. El mapa utiliza una vista incrustada de OpenStreetMap por sede, mientras que el HTML original conserva su implementación con Leaflet. Las solicitudes son simuladas y no generan comunicaciones externas.
+
+Los entregables académicos incluyen el repositorio y su historial de trabajo en ramas, un ZIP del proyecto, el ERS actualizado y el informe de pruebas/cobertura. La explicación y demostración individual se preparan sobre los comandos, componentes y flujos realmente implementados.
