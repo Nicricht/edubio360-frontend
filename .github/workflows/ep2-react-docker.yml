@@ -1,0 +1,54 @@
+name: EP2 React y Docker
+
+on:
+  push:
+    branches:
+      - ep2/react-vite-typescript
+  pull_request:
+    paths:
+      - 'ep2/**'
+      - '.github/workflows/ep2-react-docker.yml'
+
+jobs:
+  pruebas-y-docker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ep2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ep2/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Pruebas y cobertura
+        run: npm run test:coverage
+      - name: Guardar reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-ep2
+          path: ep2/coverage/
+          retention-days: 14
+      - name: Compilar aplicación
+        run: npm run build
+      - name: Construir imagen Docker
+        run: docker build -t edubio360-ep2 .
+      - name: Comprobar contenedor
+        run: |
+          docker run -d --name edubio360-ep2-ci -p 8080:80 edubio360-ep2
+          for intento in $(seq 1 15); do
+            if curl --fail --silent http://localhost:8080/ > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent http://localhost:8080/
+          curl --fail --silent http://localhost:8080/carreras
+          curl --fail --silent http://localhost:8080/estudiante/solicitudes
+          curl --fail --silent http://localhost:8080/mapa
+      - name: Detener contenedor
+        if: always()
+        run: docker rm -f edubio360-ep2-ci || true
