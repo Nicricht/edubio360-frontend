@@ -22,7 +22,7 @@ La pauta exige al menos 15 pruebas aprobadas y un reporte de cobertura; no fija 
 ## 2. Herramientas y ejecución
 
 Se utiliza Vitest, React Testing Library, jsdom, user-event, espías y cobertura v8.
-Para reproducir: desde `ep2`, ejecutar `npm ci`, `npm run test:coverage` y `npm run build`.
+Para reproducir: desde la raíz del repositorio, ejecutar `npm ci`, `npm run test:coverage` y `npm run build`.
 El reporte HTML se encuentra en `coverage/index.html`.
 
 ## 3. Resultados

@@ -32,7 +32,7 @@ docker build -t edubio360-ep2 .
 docker run --rm -p 8080:80 edubio360-ep2
 ```
 
-Abrir `http://localhost:8080`. El contenedor usa Nginx y permite acceder directamente a rutas de React Router. El flujo de GitHub Actions `EP2 React y Docker` verifica la compilación, los tests y la respuesta HTTP del contenedor al actualizar la rama de EP2.
+Abrir `http://localhost:8080`. El contenedor usa Nginx y permite acceder directamente a rutas de React Router. El flujo de GitHub Actions `EP2 React y Docker` verifica la compilación, los tests y la respuesta HTTP del contenedor al actualizar `main`.
 
 ## Vistas y funcionalidades
 
