@@ -7,7 +7,7 @@ import { OfertaCard } from '../components/molecules/OfertaCard';
 import { EmptyState } from '../components/molecules/EmptyState';
 
 export function Catalogo() {
-  const { ofertas, compararError } = useDatos();
+  const { ofertas, compararError, catalogoCargando, catalogoError } = useDatos();
   const [parametros] = useSearchParams();
   const [buscar, setBuscar] = useState('');
   const [area, setArea] = useState('');
@@ -104,7 +104,7 @@ export function Catalogo() {
           )}
         </div>
         {compararError && <p role="alert" className="text-danger">{compararError}</p>}
-        {filtered.length ? (
+        {catalogoCargando ? <p role="status">Cargando catálogo...</p> : catalogoError ? <p role="alert">{catalogoError}</p> : filtered.length ? (
           <div className="ofertas-grid">
             {filtered.map((oferta) => (
               <OfertaCard key={oferta.id} oferta={oferta} />

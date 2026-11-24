@@ -39,7 +39,7 @@ describe('Vistas migradas de EP1', () => {
     await user.type(screen.getByLabelText(/correo electrónico/i), 'estudiante@duoc.cl');
     await user.type(screen.getByLabelText(/contraseña/i), '1234');
     await user.click(screen.getByRole('button', { name: /ingresar/i }));
-    expect(screen.getByRole('heading', { name: /panel del estudiante/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /panel del estudiante/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /solicitar orientación/i })).toBeInTheDocument();
   });
 

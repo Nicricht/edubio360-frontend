@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useDatos } from '../context/DatosContext';
 import { FormField, TextareaField } from '../components/atoms/FormField';
 import { validateOferta } from '../utils/validations';
+import { realApi } from '../services/authApi';
 import type { Oferta } from '../types';
 
 const empty: Oferta = {
@@ -27,12 +28,17 @@ export function AdminOfertaForm() {
   const { id } = useParams();
   const editing = useLocation().pathname.endsWith('/editar');
   const navigate = useNavigate();
-  const { ofertas, createOferta, updateOferta } = useDatos();
+  const { ofertas, sedes, catalogoCargando, catalogoError, createOferta, updateOferta } = useDatos();
   const found = ofertas.find((o) => o.id === id);
   const [form, setForm] = useState<Oferta>(() => (editing && found ? { ...found } : { ...empty }));
   const [errors, setErrors] = useState<Partial<Record<keyof Oferta, string>>>({});
   const [saveError, setSaveError] = useState('');
 
+  const [enviando, setEnviando] = useState(false);
+  useEffect(() => { if (editing && found) setForm({ ...found }); }, [editing, found]);
+
+  if (catalogoCargando) return <main role="status">Cargando catálogo...</main>;
+  if (catalogoError) return <main role="alert">{catalogoError}</main>;
   if (editing && !found)
     return (
       <main className="container page-container section-space">
@@ -45,22 +51,24 @@ export function AdminOfertaForm() {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (enviando) return;
     const nextErrors = validateOferta(form);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
+    setEnviando(true);
     try {
-      if (editing && id) updateOferta(id, form);
+      if (editing && id) await updateOferta(id, form);
       else
-        createOferta({
+        await createOferta({
           ...form,
           id: `of-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
         });
       navigate('/admin/ofertas');
-    } catch {
-      setSaveError('No se pudo guardar en el almacenamiento local. Revisa el espacio disponible.');
-    }
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'No fue posible guardar la oferta.');
+    } finally { setEnviando(false); }
   };
   const text = (
     key: 'carrera' | 'institucion' | 'comuna' | 'area' | 'modalidad' | 'jornada' | 'nivel',
@@ -86,8 +94,20 @@ export function AdminOfertaForm() {
       <form onSubmit={submit} noValidate className="form-surface">
         <div className="row g-4">
           <div className="col-md-6">{text('carrera', 'Carrera')}</div>
-          <div className="col-md-6">{text('institucion', 'Institución')}</div>
-          <div className="col-md-6">{text('comuna', 'Comuna')}</div>
+          {realApi ? <div className="col-md-6">
+            <label htmlFor="sedeId">Sede e institución</label>
+            <select id="sedeId" className="form-select" value={form.sedeId ?? ''} onChange={e => {
+              const sede = sedes.find(s => s.id === Number(e.target.value));
+              setForm(prev => ({ ...prev, sedeId: sede?.id, institucion: sede?.institucion ?? '', comuna: sede?.comuna ?? '' }));
+            }}>
+              <option value="">Selecciona una sede</option>
+              {sedes.map(s => <option key={s.id} value={s.id}>{s.institucion} · {s.comuna}</option>)}
+            </select>
+            {(errors.institucion || errors.comuna) && <p role="alert" className="field-error">Selecciona una sede.</p>}
+          </div> : <>
+            <div className="col-md-6">{text('institucion', 'Institución')}</div>
+            <div className="col-md-6">{text('comuna', 'Comuna')}</div>
+          </>}
           <div className="col-md-6">{text('area', 'Área')}</div>
           <div className="col-md-4">{text('modalidad', 'Modalidad')}</div>
           <div className="col-md-4">{text('jornada', 'Jornada')}</div>
@@ -169,7 +189,7 @@ export function AdminOfertaForm() {
             Cancelar
           </Link>
           <button
-            type="submit"
+            type="submit" disabled={enviando}
             className="btn btn-dark rounded-pill px-4 d-flex align-items-center gap-2"
           >
             <Save size={18} />

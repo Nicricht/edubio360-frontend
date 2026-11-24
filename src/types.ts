@@ -1,5 +1,6 @@
 export interface Oferta {
   id: string;
+  sedeId?: number;
   carrera: string;
   institucion: string;
   comuna: string;
