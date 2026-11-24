@@ -3,6 +3,7 @@ import type { Oferta, Usuario } from '../types';
 import { createOfertaRepository, createUsuarioRepository } from '../services/repositories';
 import { realApi } from '../services/authApi';
 import { catalogoApi, type SedeApi } from '../services/catalogoApi';
+import { usuariosApi, desdeUsuarioApi } from '../services/usuariosApi';
 import { desdeApi, haciaApi } from '../services/catalogoAdapter';
 
 export interface DatosValue {
@@ -11,6 +12,10 @@ export interface DatosValue {
   catalogoCargando: boolean;
   catalogoError: string;
   usuarios: Usuario[];
+  usuariosCargando: boolean;
+  usuariosError: string;
+  sincronizarUsuarios(jwt: string, rol: Usuario['rol']): Promise<void>;
+  limpiarUsuarios(): void;
   comparadasIds: string[];
   compararError: string;
   toggleComparar(id: string): void;
@@ -18,9 +23,9 @@ export interface DatosValue {
   createOferta(oferta: Oferta): void | Promise<void>;
   updateOferta(id: string, changes: Partial<Oferta>): void | Promise<void>;
   removeOferta(id: string): void | Promise<void>;
-  createUsuario(usuario: Usuario): void;
-  updateUsuario(id: string, changes: Partial<Usuario>): void;
-  removeUsuario(id: string): void;
+  createUsuario(usuario: Usuario, password?: string): void | Promise<void>;
+  updateUsuario(id: string, changes: Partial<Usuario>, password?: string): void | Promise<void>;
+  removeUsuario(id: string): void | Promise<void>;
 }
 
 const Context = createContext<DatosValue | null>(null);
@@ -32,7 +37,9 @@ export function DatosProvider({ children }: { children: ReactNode }) {
   const [sedes, setSedes] = useState<SedeApi[]>([]);
   const [catalogoCargando, setCatalogoCargando] = useState(realApi);
   const [catalogoError, setCatalogoError] = useState('');
-  const [usuarios, setUsuarios] = useState(() => usuarioRepo.list());
+  const [usuarios, setUsuarios] = useState(() => realApi ? [] : usuarioRepo.list());
+  const [usuariosCargando, setUsuariosCargando] = useState(realApi);
+  const [usuariosError, setUsuariosError] = useState('');
   const [comparadasIds, setComparadasIds] = useState<string[]>(() => {
     try {
       const parsed: unknown = JSON.parse(localStorage.getItem('edubio360:comparadas') || '[]');
@@ -88,7 +95,17 @@ export function DatosProvider({ children }: { children: ReactNode }) {
 
   const value: DatosValue = {
     ofertas, sedes, catalogoCargando, catalogoError,
-    usuarios,
+    usuarios, usuariosCargando, usuariosError,
+    sincronizarUsuarios: async (jwt, rol) => {
+      if (!realApi) return;
+      setUsuariosCargando(true); setUsuariosError('');
+      try {
+        const registros = rol === 'Administrador' ? await usuariosApi.listar(jwt) : [await usuariosApi.perfil(jwt)];
+        if (sessionStorage.getItem('edubio360:jwt') === jwt) setUsuarios(registros.map(desdeUsuarioApi));
+      } catch { if (sessionStorage.getItem('edubio360:jwt') === jwt) setUsuariosError('No fue posible cargar los usuarios.'); }
+      finally { if (sessionStorage.getItem('edubio360:jwt') === jwt) setUsuariosCargando(false); }
+    },
+    limpiarUsuarios: () => { if (realApi) { setUsuarios([]); setUsuariosError(''); setUsuariosCargando(false); } },
     comparadasIds,
     compararError,
     toggleComparar: (id) => {
@@ -138,15 +155,25 @@ export function DatosProvider({ children }: { children: ReactNode }) {
       if (comparadasIds.includes(id))
         saveCompared(comparadasIds.filter((current) => current !== id));
     },
-    createUsuario: (usuario) => {
+    createUsuario: (usuario, password) => {
+      if (realApi) {
+        if (!password) throw new Error('Contraseña requerida.');
+        return usuariosApi.crear(usuario, password, token()).then(u => { setUsuarios(prev => [...prev, desdeUsuarioApi(u)]); });
+      }
       usuarioRepo.create(usuario);
       setUsuarios(usuarioRepo.list());
     },
-    updateUsuario: (id, changes) => {
+    updateUsuario: (id, changes, password) => {
+      if (realApi) {
+        const u = usuarios.find(x => x.id === id);
+        if (!u) throw new Error('Usuario no encontrado.');
+        return usuariosApi.actualizar({ ...u, ...changes }, token(), password).then(updated => { setUsuarios(prev => prev.map(x => x.id === id ? desdeUsuarioApi(updated) : x)); });
+      }
       usuarioRepo.update(id, changes);
       setUsuarios(usuarioRepo.list());
     },
     removeUsuario: (id) => {
+      if (realApi) return usuariosApi.eliminar(id, token()).then(() => { setUsuarios(prev => prev.filter(u => u.id !== id)); });
       usuarioRepo.remove(id);
       setUsuarios(usuarioRepo.list());
     },

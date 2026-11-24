@@ -1,15 +1,17 @@
 import { apiRest } from './apiRest';
 import type { Sesion } from './auth';
+import { desdeUsuarioApi, type UsuarioApi } from './usuariosApi';
 
 export const realApi = import.meta.env.VITE_REAL_API === 'true';
 const key = 'edubio360:jwt';
 interface LoginResponse { token: string; email: string; role: string }
-interface UserResponse { id: number; email: string; role: string; active: boolean }
+type UserResponse = UsuarioApi;
 
 function session(user: UserResponse, token: string): Sesion {
   const roles = { STUDENT: 'Estudiante', ORIENTADOR: 'Orientador', ADMIN: 'Administrador' } as const;
   if (!user.active || !Object.prototype.hasOwnProperty.call(roles, user.role)) throw new Error('Sesión inválida');
-  return { correo: user.email, nombre: user.email, rol: roles[user.role as keyof typeof roles], token };
+  const perfil = desdeUsuarioApi(user);
+  return { correo: user.email, nombre: (perfil.nombre + ' ' + perfil.apellidos).trim() || user.email, rol: roles[user.role as keyof typeof roles], token };
 }
 
 export async function ingresarReal(correo: string, clave: string, storage: Storage): Promise<Sesion> {

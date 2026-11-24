@@ -5,9 +5,10 @@ import { useDatos } from '../context/DatosContext';
 import { useSesion } from '../context/SesionContext';
 
 export function AdminUsuarios() {
-  const { usuarios, removeUsuario, updateUsuario } = useDatos();
+  const { usuarios, usuariosCargando, usuariosError, removeUsuario, updateUsuario } = useDatos();
   const { sesion } = useSesion();
   const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState('');
   const selected = usuarios.find((u) => u.id === pending);
   return (
     <main className="container page-container section-space admin-page">
@@ -18,7 +19,7 @@ export function AdminUsuarios() {
         <div>
           <div className="eyebrow">ADMINISTRACIÓN</div>
           <h1>Usuarios</h1>
-          <p>Registros de ejemplo guardados localmente, sin autenticación real.</p>
+          <p>Administra las cuentas y sus permisos.</p>
         </div>
         <Link
           to="/admin/usuarios/nuevo"
@@ -27,6 +28,8 @@ export function AdminUsuarios() {
           <Plus size={18} /> Nuevo usuario
         </Link>
       </div>
+      {usuariosCargando && <p role="status">Cargando usuarios...</p>}
+      {(usuariosError || error) && <p role="alert">{usuariosError || error}</p>}
       {selected && (
         <section
           className="confirm-panel"
@@ -39,9 +42,9 @@ export function AdminUsuarios() {
           </p>
           <button
             className="btn btn-danger me-2"
-            onClick={() => {
-              removeUsuario(selected.id);
-              setPending(null);
+            onClick={async () => {
+              try { await removeUsuario(selected.id); setPending(null); }
+              catch (e) { setError(e instanceof Error ? e.message : 'No se pudo eliminar.'); }
             }}
           >
             Confirmar eliminación
@@ -81,7 +84,10 @@ export function AdminUsuarios() {
                     <button
                       className="btn btn-outline-secondary btn-sm"
                       disabled={u.correo === sesion?.correo}
-                      onClick={() => updateUsuario(u.id, { estado: u.estado === 'INACTIVO' ? 'ACTIVO' : 'INACTIVO' })}
+                      onClick={async () => {
+                        try { await updateUsuario(u.id, { estado: u.estado === 'INACTIVO' ? 'ACTIVO' : 'INACTIVO' }); }
+                        catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar.'); }
+                      }}
                     >
                       {u.estado === 'INACTIVO' ? 'Activar' : 'Desactivar'}
                     </button>
