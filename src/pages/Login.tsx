@@ -25,7 +25,10 @@ export function Login() {
     e.preventDefault();
     if (enviando) return;
     const next = validateLogin(form);
-    if (realApi && form.contrasena.length >= 8 && form.contrasena.length <= 100) delete next.contrasena;
+    if (realApi) {
+      if (form.contrasena.length >= 8 && form.contrasena.length <= 100) delete next.contrasena;
+      else next.contrasena = 'La contraseña debe tener entre 8 y 100 caracteres.';
+    }
     setErrors(next);
     if (Object.keys(next).length) return;
     setEnviando(true);

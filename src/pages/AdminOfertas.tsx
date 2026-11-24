@@ -5,8 +5,10 @@ import { useDatos } from '../context/DatosContext';
 import { pesoCL } from '../components/atoms/Price';
 
 export function AdminOfertas() {
-  const { ofertas, removeOferta } = useDatos();
+  const { ofertas, catalogoCargando, catalogoError, removeOferta } = useDatos();
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [eliminando, setEliminando] = useState(false);
   const selected = ofertas.find((o) => o.id === pendingDelete);
   return (
     <main className="container page-container section-space admin-page">
@@ -17,7 +19,7 @@ export function AdminOfertas() {
         <div>
           <div className="eyebrow">ADMINISTRACIÓN</div>
           <h1>Ofertas académicas</h1>
-          <p>Gestiona las carreras que aparecen en el catálogo de demostración.</p>
+          <p>Gestiona las carreras que aparecen en el catálogo.</p>
         </div>
         <Link
           className="btn btn-dark rounded-pill px-4 d-inline-flex gap-2 align-items-center"
@@ -26,6 +28,8 @@ export function AdminOfertas() {
           <Plus size={18} /> Crear oferta
         </Link>
       </div>
+      {catalogoCargando && <p role="status">Cargando catálogo...</p>}
+      {(catalogoError || error) && <p role="alert">{catalogoError || error}</p>}
       {selected && (
         <section
           className="confirm-panel"
@@ -34,15 +38,17 @@ export function AdminOfertas() {
         >
           <strong>Confirmar eliminación</strong>
           <p>
-            ¿Eliminar “{selected.carrera}”? Esta acción se refleja inmediatamente en el catálogo
-            local.
+            ¿Eliminar “{selected.carrera}”? Esta acción se refleja inmediatamente en el catálogo.
           </p>
           <div className="d-flex gap-2">
             <button
               className="btn btn-danger"
-              onClick={() => {
-                removeOferta(selected.id);
-                setPendingDelete(null);
+              disabled={eliminando}
+              onClick={async () => {
+                setEliminando(true); setError('');
+                try { await removeOferta(selected.id); setPendingDelete(null); }
+                catch (e) { setError(e instanceof Error ? e.message : 'No se pudo eliminar.'); }
+                finally { setEliminando(false); }
               }}
             >
               Confirmar eliminación

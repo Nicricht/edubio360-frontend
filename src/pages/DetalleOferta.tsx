@@ -16,8 +16,10 @@ import { EmptyState } from '../components/molecules/EmptyState';
 
 export function DetalleOferta() {
   const { id } = useParams();
-  const { ofertas, comparadasIds, toggleComparar } = useDatos();
+  const { ofertas, comparadasIds, toggleComparar, catalogoCargando, catalogoError } = useDatos();
   const oferta = ofertas.find((item) => item.id === id);
+  if (catalogoCargando) return <main role="status">Cargando oferta...</main>;
+  if (catalogoError) return <main role="alert">{catalogoError}</main>;
   if (!oferta)
     return (
       <main className="container page-container section-space">
