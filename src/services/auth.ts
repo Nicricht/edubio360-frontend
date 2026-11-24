@@ -4,6 +4,7 @@ export interface Sesion {
   correo: string;
   nombre: string;
   rol: Usuario['rol'];
+  token?: string;
 }
 
 const claveSesion = 'edubio360:sesion';

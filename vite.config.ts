@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   base: process.env.GITHUB_PAGES === 'true' ? '/edubio360-frontend/' : '/',
   plugins: [react()],
+  server: { proxy: { '/api': { target: process.env.EDUBIO_API_PROXY || 'http://localhost:8080', changeOrigin: true } } },
   test: {
     environment: 'jsdom',
     maxWorkers: 4,

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/ep3-integral
   pull_request:
     paths:
       - 'src/**'
