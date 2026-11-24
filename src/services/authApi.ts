@@ -2,7 +2,7 @@ import { apiRest } from './apiRest';
 import type { Sesion } from './auth';
 import { desdeUsuarioApi, type UsuarioApi } from './usuariosApi';
 
-export const realApi = import.meta.env.VITE_REAL_API === 'true';
+export const realApi = import.meta.env.VITE_REAL_API === 'true' || (import.meta.env.MODE !== 'test' && import.meta.env.VITE_REAL_API !== 'false');
 const key = 'edubio360:jwt';
 interface LoginResponse { token: string; email: string; role: string }
 type UserResponse = UsuarioApi;

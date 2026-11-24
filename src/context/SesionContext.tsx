@@ -33,6 +33,35 @@ export function SesionProvider({ children }: { children: ReactNode }) {
     if (JSON.stringify(actual) !== JSON.stringify(sesion)) setSesion(actual);
   }, [usuarios, sesion]);
 
+  useEffect(() => {
+    if (!realApi) return;
+    const invalidar = (evento: Event) => {
+      const token = (evento as CustomEvent<string>).detail;
+      if (sessionStorage.getItem('edubio360:jwt') !== token) return;
+      revision.current++;
+      salirReal(sessionStorage);
+      limpiarUsuarios();
+      setSesion(null);
+      setCargando(false);
+    };
+    window.addEventListener('edubio360:sesion-invalida', invalidar);
+    return () => window.removeEventListener('edubio360:sesion-invalida', invalidar);
+  }, [limpiarUsuarios]);
+
+  useEffect(() => {
+    if (!realApi || !sesion?.token) return;
+    const jwt = sesion.token;
+    const timer = window.setInterval(() => {
+      if (sessionStorage.getItem('edubio360:jwt') !== jwt) return;
+      void recuperarReal(sessionStorage).then(s => {
+        if (sessionStorage.getItem('edubio360:jwt') !== jwt && s) return;
+        if (!s && !sessionStorage.getItem('edubio360:jwt')) { setSesion(null); limpiarUsuarios(); }
+        else if (s) setSesion(s);
+      });
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, [sesion?.token]);
+
   return <Context.Provider value={{
     sesion, cargando,
     ingresar: (correo, clave) => {
