@@ -30,7 +30,8 @@ import { Notificaciones } from './pages/Notificaciones';
 import { Perfil } from './pages/Perfil';
 
 function Protegida({ rol, children }: { rol: Usuario['rol']; children: ReactNode }) {
-  const { sesion } = useSesion();
+  const { sesion, cargando } = useSesion();
+  if (cargando) return <main className="container section-space" role="status">Verificando sesión...</main>;
   if (!sesion) return <Navigate to="/login" replace />;
   if (sesion.rol !== rol) return <Navigate to={destinoRol(sesion.rol)} replace />;
   return children;
