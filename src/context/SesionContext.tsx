@@ -12,7 +12,7 @@ interface SesionValue {
 const Context = createContext<SesionValue | null>(null);
 
 export function SesionProvider({ children }: { children: ReactNode }) {
-  const { usuarios } = useDatos();
+  const { usuarios, sincronizarUsuarios, limpiarUsuarios } = useDatos();
   const [sesion, setSesion] = useState(() => realApi ? null : cargarSesion(usuarios, sessionStorage));
   const [cargando, setCargando] = useState(realApi);
   const revision = useRef(0);
@@ -22,7 +22,7 @@ export function SesionProvider({ children }: { children: ReactNode }) {
     let activo = true;
     const actual = revision.current;
     recuperarReal(sessionStorage).then(s => {
-      if (activo && actual === revision.current) { setSesion(s); setCargando(false); }
+      if (activo && actual === revision.current) { setSesion(s); setCargando(false); if (s?.token) void sincronizarUsuarios(s.token, s.rol); }
     });
     return () => { activo = false; };
   }, []);
@@ -39,7 +39,7 @@ export function SesionProvider({ children }: { children: ReactNode }) {
       if (realApi) {
         const actual = ++revision.current;
         return ingresarReal(correo, clave, sessionStorage).then(s => {
-          if (actual === revision.current) { setSesion(s); setCargando(false); }
+          if (actual === revision.current) { setSesion(s); setCargando(false); if (s.token) void sincronizarUsuarios(s.token, s.rol); }
           return s;
         });
       }
@@ -49,6 +49,7 @@ export function SesionProvider({ children }: { children: ReactNode }) {
     },
     salir: () => {
       revision.current++;
+      limpiarUsuarios();
       salirReal(sessionStorage);
       cerrarSesion(sessionStorage);
       setSesion(null);

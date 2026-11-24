@@ -22,10 +22,12 @@ export function UsuarioForm({
   admin = false,
   onSave,
   submitLabel,
+  passwordMode = 'none',
 }: {
   initial?: Usuario;
   admin?: boolean;
-  onSave(data: UsuarioFormData): void;
+  onSave(data: UsuarioFormData, password?: string): void | Promise<void>;
+  passwordMode?: 'none' | 'required' | 'optional';
   submitLabel: string;
 }) {
   const [form, setForm] = useState<UsuarioFormData>(() =>
@@ -42,6 +44,10 @@ export function UsuarioForm({
         }
       : { ...blank },
   );
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof RegistroInput, string>>>({});
   const update = (key: keyof UsuarioFormData, value: string) => {
     setForm((prev) =>
@@ -49,11 +55,18 @@ export function UsuarioForm({
     );
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     const next = validateRegistro(form);
     setErrors(next);
-    if (!Object.keys(next).length) onSave(form);
+    if (enviando || Object.keys(next).length) return;
+    if (passwordMode === 'required' || (passwordMode === 'optional' && password)) {
+      if (password.length < 8 || new TextEncoder().encode(password).length > 72) { setPasswordError('Usa entre 8 caracteres y 72 bytes.'); return; }
+    }
+    setPasswordError(''); setSaveError(''); setEnviando(true);
+    try { await onSave(form, password || undefined); setPassword(''); }
+    catch (error) { setSaveError(error instanceof Error ? error.message : 'No se pudo guardar.'); }
+    finally { setEnviando(false); }
   };
   return (
     <form onSubmit={submit} noValidate className="form-surface">
@@ -158,9 +171,11 @@ export function UsuarioForm({
           </div>
         )}
       </div>
+      {passwordMode !== 'none' && <FormField label={passwordMode === 'required' ? 'Contraseña' : 'Nueva contraseña (opcional)'} name="password" type="password" autoComplete="new-password" value={password} error={passwordError} onChange={e => setPassword(e.target.value)} />}
+      {saveError && <p role="alert" className="field-error">{saveError}</p>}
       <div className="form-actions">
         <button
-          type="submit"
+          type="submit" disabled={enviando}
           className="btn btn-dark rounded-pill px-4 d-flex gap-2 align-items-center"
         >
           <Save size={18} />
