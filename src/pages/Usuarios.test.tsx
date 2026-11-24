@@ -56,7 +56,7 @@ describe('Registro y usuarios', () => {
     renderUsers('/admin/usuarios/us-001/editar');
     await user.selectOptions(screen.getByLabelText(/^rol$/i), 'Administrador');
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
-    expect(within(screen.getAllByTestId('admin-usuario-row')[0]).getByText('Administrador')).toBeInTheDocument();
+    expect(within((await screen.findAllByTestId('admin-usuario-row'))[0]).getByText('Administrador')).toBeInTheDocument();
   });
 
   it('permite desactivar y volver a activar un usuario', async () => {
