@@ -15,6 +15,9 @@ export async function apiRest<T>(path: string, options: RequestInit = {}, token?
 
   const response = await fetch(base + path, { ...options, headers });
   if (!response.ok) {
+    if (response.status === 401 && token && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('edubio360:sesion-invalida', { detail: token }));
+    }
     const error: unknown = await response.json().catch(() => null);
     const message = error && typeof error === 'object' && 'message' in error &&
       typeof error.message === 'string' ? error.message : 'Error HTTP ' + response.status;
