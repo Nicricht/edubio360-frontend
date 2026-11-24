@@ -1,7 +1,7 @@
 name: Auditoria de dependencias frontend
 on:
   push:
-    branches: [nico, main]
+    branches: [ep3-devops-cloud]
     paths:
       - 'package.json'
       - 'package-lock.json'
