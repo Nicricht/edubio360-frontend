@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - nico
       - feature/ep3-integral
       - feature/ep3-sesion-segura
   pull_request:
