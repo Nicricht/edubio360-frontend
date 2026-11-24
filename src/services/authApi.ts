@@ -1,4 +1,4 @@
-import { apiRest } from './apiRest';
+import { ApiError, apiRest } from './apiRest';
 import type { Sesion } from './auth';
 import { desdeUsuarioApi, type UsuarioApi } from './usuariosApi';
 
@@ -48,7 +48,11 @@ export async function recuperarReal(storage: Storage): Promise<Sesion | null> {
     const nueva = session(user, renovado.token);
     storage.setItem(key, renovado.token);
     return nueva;
-  } catch {
+  } catch (error) {
+    // No confundir una caída de red o servicio con credenciales inválidas.
+    // Nunca se devuelve una sesión sin haberla verificado con el servidor.
+    if (error instanceof TypeError || (error instanceof ApiError &&
+        (error.status >= 500 || error.status === 408 || error.status === 429))) return null;
     if (storage.getItem(key) === token) storage.removeItem(key);
     return null;
   }

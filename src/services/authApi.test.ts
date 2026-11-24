@@ -48,6 +48,30 @@ describe('Autenticación REST', () => {
     expect(await recuperarReal(sessionStorage)).toBeNull();
     expect(sessionStorage.getItem('edubio360:jwt')).toBeNull();
   });
+  it('conserva el token ante HTTP 503 y lo verifica al recuperarse el servidor', async () => {
+    sessionStorage.setItem('edubio360:jwt', 'jwt');
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(response({ message: 'Servicio temporalmente no disponible' }, 503))
+      .mockResolvedValueOnce(response({ id: 2, email: 's@example.test', role: 'STUDENT', active: true })));
+    expect(await recuperarReal(sessionStorage)).toBeNull();
+    expect(sessionStorage.getItem('edubio360:jwt')).toBe('jwt');
+    expect((await recuperarReal(sessionStorage))?.rol).toBe('Estudiante');
+  });
+  it('no borra el token durante una interrupción de red', async () => {
+    sessionStorage.setItem('edubio360:jwt', 'jwt');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    expect(await recuperarReal(sessionStorage)).toBeNull();
+    expect(sessionStorage.getItem('edubio360:jwt')).toBe('jwt');
+  });
+  it('conserva el token si falla temporalmente la renovación', async () => {
+    const token = 'header.' + btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 120 })) + '.signature';
+    sessionStorage.setItem('edubio360:jwt', token);
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(response({ id: 2, email: 's@example.test', role: 'STUDENT', active: true }))
+      .mockResolvedValueOnce(response({ message: 'No disponible' }, 503)));
+    expect(await recuperarReal(sessionStorage)).toBeNull();
+    expect(sessionStorage.getItem('edubio360:jwt')).toBe(token);
+  });
   it('elimina el token vencido sin recurrir a una sesión simulada', async () => {
     sessionStorage.setItem('edubio360:jwt', 'vencido');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ message: 'Vencido' }, 401)));

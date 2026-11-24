@@ -21,10 +21,20 @@ export function SesionProvider({ children }: { children: ReactNode }) {
     if (!realApi) return;
     let activo = true;
     const actual = revision.current;
-    recuperarReal(sessionStorage).then(s => {
-      if (activo && actual === revision.current) { setSesion(s); setCargando(false); if (s?.token) void sincronizarUsuarios(s.token, s.rol); }
-    });
-    return () => { activo = false; };
+    let timer: number | undefined;
+    const recuperar = async () => {
+      const s = await recuperarReal(sessionStorage);
+      if (!activo || actual !== revision.current) return;
+      if (!s && sessionStorage.getItem('edubio360:jwt')) {
+        timer = window.setTimeout(() => void recuperar(), 5000);
+        return;
+      }
+      setSesion(s);
+      setCargando(false);
+      if (s?.token) void sincronizarUsuarios(s.token, s.rol);
+    };
+    void recuperar();
+    return () => { activo = false; window.clearTimeout(timer); };
   }, []);
 
   useEffect(() => {
@@ -51,22 +61,28 @@ export function SesionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!realApi || !sesion?.token) return;
     const jwt = sesion.token;
-    let verificando = false;
     let activo = true;
-    const timer = window.setInterval(() => {
-      if (verificando || sessionStorage.getItem('edubio360:jwt') !== jwt) return;
-      verificando = true;
-      void recuperarReal(sessionStorage).then(s => {
-        if (!activo) return;
-        const almacenado = sessionStorage.getItem('edubio360:jwt');
-        if (!s && !almacenado) { setSesion(null); limpiarUsuarios(); }
-        else if (s && almacenado === s.token) {
-          setSesion(s);
-          if (s.token && s.token !== jwt) void sincronizarUsuarios(s.token, s.rol);
-        }
-      }).finally(() => { verificando = false; });
-    }, 60000);
-    return () => { activo = false; window.clearInterval(timer); };
+    let timer: number | undefined;
+    const actual = revision.current;
+    const verificar = async () => {
+      if (!activo || actual !== revision.current || sessionStorage.getItem('edubio360:jwt') !== jwt) return;
+      const s = await recuperarReal(sessionStorage);
+      if (!activo || actual !== revision.current) return;
+      const almacenado = sessionStorage.getItem('edubio360:jwt');
+      if (!s && !almacenado) { setSesion(null); setCargando(false); limpiarUsuarios(); return; }
+      if (s && almacenado === s.token) {
+        setSesion(s);
+        setCargando(false);
+        if (s.token && s.token !== jwt) { void sincronizarUsuarios(s.token, s.rol); return; }
+        timer = window.setTimeout(() => void verificar(), 60000);
+      } else if (!s && almacenado === jwt) {
+        // Bloquear las rutas protegidas hasta que el servidor vuelva a validar.
+        setCargando(true);
+        timer = window.setTimeout(() => void verificar(), 5000);
+      }
+    };
+    timer = window.setTimeout(() => void verificar(), 60000);
+    return () => { activo = false; window.clearTimeout(timer); };
   }, [sesion?.token]);
 
   return <Context.Provider value={{
