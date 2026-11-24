@@ -51,15 +51,22 @@ export function SesionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!realApi || !sesion?.token) return;
     const jwt = sesion.token;
+    let verificando = false;
+    let activo = true;
     const timer = window.setInterval(() => {
-      if (sessionStorage.getItem('edubio360:jwt') !== jwt) return;
+      if (verificando || sessionStorage.getItem('edubio360:jwt') !== jwt) return;
+      verificando = true;
       void recuperarReal(sessionStorage).then(s => {
-        if (sessionStorage.getItem('edubio360:jwt') !== jwt && s) return;
-        if (!s && !sessionStorage.getItem('edubio360:jwt')) { setSesion(null); limpiarUsuarios(); }
-        else if (s) setSesion(s);
-      });
+        if (!activo) return;
+        const almacenado = sessionStorage.getItem('edubio360:jwt');
+        if (!s && !almacenado) { setSesion(null); limpiarUsuarios(); }
+        else if (s && almacenado === s.token) {
+          setSesion(s);
+          if (s.token && s.token !== jwt) void sincronizarUsuarios(s.token, s.rol);
+        }
+      }).finally(() => { verificando = false; });
     }, 60000);
-    return () => window.clearInterval(timer);
+    return () => { activo = false; window.clearInterval(timer); };
   }, [sesion?.token]);
 
   return <Context.Provider value={{

@@ -25,13 +25,31 @@ export async function ingresarReal(correo: string, clave: string, storage: Stora
   return actual;
 }
 
+function requiereRenovacion(token: string): boolean {
+  try {
+    const segmento = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(segmento));
+    // La lectura local solo determina cuándo consultar al servidor; no autentica.
+    return typeof payload.exp === 'number' && payload.exp * 1000 - Date.now() <= 180000;
+  } catch { return false; }
+}
+
 export async function recuperarReal(storage: Storage): Promise<Sesion | null> {
   const token = storage.getItem(key);
   if (!token) return null;
   try {
-    return session(await apiRest<UserResponse>('/api/auth/me', {}, token), token);
+    const user = await apiRest<UserResponse>('/api/auth/me', {}, token);
+    if (storage.getItem(key) !== token) return null;
+    const actual = session(user, token);
+    if (!requiereRenovacion(token)) return actual;
+    const renovado = await apiRest<LoginResponse>('/api/auth/refresh', { method: 'POST' }, token);
+    if (storage.getItem(key) !== token) return null;
+    if (renovado.email !== user.email || renovado.role !== user.role) throw new Error('Sesión modificada');
+    const nueva = session(user, renovado.token);
+    storage.setItem(key, renovado.token);
+    return nueva;
   } catch {
-    storage.removeItem(key);
+    if (storage.getItem(key) === token) storage.removeItem(key);
     return null;
   }
 }
