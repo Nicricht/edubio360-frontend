@@ -1,0 +1,54 @@
+name: Auditoria de dependencias frontend
+on:
+  push:
+    branches: [nico, main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/security-audit.yml'
+  workflow_dispatch:
+  pull_request:
+    paths: ['package.json', 'package-lock.json', '.github/workflows/security-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Auditar dependencias actuales
+        run: |
+          mkdir -p evidence
+          npm audit --json > evidence/audit-all.json || true
+          npm audit --omit=dev --json > evidence/audit-runtime.json || true
+          node --input-type=commonjs -e 'for(const file of ["audit-all.json","audit-runtime.json"]){const x=require("./evidence/"+file);if(!x.metadata||x.error)throw Error("Auditoria no disponible: "+file);console.log(file,JSON.stringify(x.metadata.vulnerabilities));for(const [name,v] of Object.entries(x.vulnerabilities||{})) console.log(name,v.severity,JSON.stringify(v.fixAvailable),JSON.stringify(v.via));}'
+      - name: Preparar candidato sin cambios mayores forzados
+        run: |
+          npm audit fix --package-lock-only --ignore-scripts || true
+          git diff -- package.json package-lock.json > evidence/dependencies.patch
+          npm audit --json > evidence/candidate-all.json || true
+          npm audit --omit=dev --json > evidence/candidate-runtime.json || true
+          node --input-type=commonjs -e 'for(const file of ["candidate-all.json","candidate-runtime.json"]){const x=require("./evidence/"+file);if(!x.metadata||x.error)throw Error("Auditoria no disponible: "+file);console.log(file,JSON.stringify(x.metadata.vulnerabilities));for(const [name,v] of Object.entries(x.vulnerabilities||{})) console.log(name,v.severity,JSON.stringify(v.fixAvailable));}'
+          git diff --stat -- package.json package-lock.json
+      - name: Validar candidato
+        run: |
+          npm ci
+          npm run test:coverage
+          npm run build
+          docker build -t edubio360-frontend-audit .
+      - name: Guardar evidencia y parche candidato
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-security-audit
+          path: evidence/
+          if-no-files-found: error
+      - name: Bloquear vulnerabilidades altas o criticas del codigo versionado
+        if: always()
+        run: |
+          node --input-type=commonjs -e 'for(const file of ["audit-all.json","audit-runtime.json"]){const x=require("./evidence/"+file);const v=x.metadata?.vulnerabilities;if(!v||x.error||v.high||v.critical)process.exitCode=1;}'
