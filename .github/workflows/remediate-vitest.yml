@@ -1,0 +1,67 @@
+name: Remediar Vitest EP3
+on:
+  push:
+    branches: [nico]
+    paths: ['.github/workflows/remediate-vitest.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: remediate-vitest-nico
+  cancel-in-progress: false
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/nico'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Actualizar exclusivamente las herramientas de prueba
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          npm install --save-dev --save-exact vitest@5.1.1 @vitest/coverage-v8@5.1.1
+          git diff --stat
+          npm audit --json > evidence/audit-all.json || true
+          npm audit --omit=dev --json > evidence/audit-runtime.json || true
+          node --input-type=commonjs -e 'for(const file of ["audit-all.json","audit-runtime.json"]){const x=require("./evidence/"+file);const v=x.metadata?.vulnerabilities;if(!v||x.error||v.high||v.critical)throw Error(file+": "+JSON.stringify(v));console.log(file,JSON.stringify(v));}'
+      - name: Ejecutar todas las pruebas existentes y construir
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run test:coverage | tee evidence/tests.txt
+          npm run build
+          docker build -t edubio360-frontend-remediated .
+          docker run -d --name frontend-security-ci -p 8080:80 edubio360-frontend-remediated
+          curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/healthz
+          curl --fail http://127.0.0.1:8080/carreras >/dev/null
+      - name: Conservar evidencias y archivos candidatos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-remediation-evidence
+          path: |
+            evidence/
+            coverage/
+            package.json
+            package-lock.json
+          if-no-files-found: error
+      - name: Incorporar actualizacion validada solamente a nico
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- . ':!package.json' ':!package-lock.json'
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then echo "Ya actualizado"; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Actualizar Vitest y cobertura tras auditoria y pruebas aprobadas'
+          git push origin HEAD:refs/heads/nico
+      - name: Detener contenedor temporal
+        if: always()
+        run: docker rm -f frontend-security-ci || true
