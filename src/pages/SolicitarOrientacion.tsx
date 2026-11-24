@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useDatos } from '../context/DatosContext';
 import { useSesion } from '../context/SesionContext';
@@ -11,7 +11,7 @@ function fechaHoy(): string {
 
 export function SolicitarOrientacion() {
   const [parametros] = useSearchParams();
-  const { ofertas, comparadasIds } = useDatos();
+  const { ofertas, comparadasIds, catalogoCargando, catalogoError } = useDatos();
   const { sesion } = useSesion();
   const { enviar } = useOrientacion();
   const idsComparacion = (parametros.get('comparacion') || '').split(',').filter(Boolean);
@@ -22,25 +22,32 @@ export function SolicitarOrientacion() {
   const [error, setError] = useState('');
   const [enviada, setEnviada] = useState(false);
 
-  const enviarFormulario = (evento: FormEvent) => {
+  const [enviando, setEnviando] = useState(false);
+  useEffect(() => { if (!ofertaId && ofertas[0]) setOfertaId(ofertas[0].id); }, [ofertas, ofertaId]);
+
+  const enviarFormulario = async (evento: FormEvent) => {
     evento.preventDefault();
     const oferta = ofertas.find((item) => item.id === ofertaId);
     if (!sesion || !oferta || !motivo.trim() || !fecha || fecha < fechaHoy()) {
       setError('Selecciona una carrera, escribe el motivo y elige una fecha desde hoy.');
       return;
     }
+    if (enviando) return;
+    setEnviando(true);
     try {
-      enviar(sesion, {
+      await enviar(sesion, {
         ofertaId, oferta: oferta.grupoComparacion || oferta.carrera, motivo, fecha,
         ofertasComparadas: comparadas.length >= 2 ? comparadas.map((item) => ({ id: item.id, carrera: item.carrera, institucion: item.institucion, comuna: item.comuna })) : [],
       });
       setError('');
       setEnviada(true);
-    } catch {
-      setError('No se pudo guardar la solicitud. Revisa los datos e inténtalo nuevamente.');
-    }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo guardar la solicitud.');
+    } finally { setEnviando(false); }
   };
 
+  if (catalogoCargando) return <main role="status">Cargando catálogo...</main>;
+  if (catalogoError) return <main role="alert">{catalogoError}</main>;
   return <main className="container page-container section-space form-page">
     <div className="eyebrow">ORIENTACIÓN VOCACIONAL</div>
     <h1>Solicitar orientación</h1>
@@ -63,7 +70,7 @@ export function SolicitarOrientacion() {
       <div><label className="form-label" htmlFor="fechaSolicitud">Fecha preferida</label>
         <input id="fechaSolicitud" className="form-control" type="date" min={fechaHoy()} value={fecha} onChange={(e) => setFecha(e.target.value)} required /></div>
       {error && <p role="alert" className="text-danger mb-0">{error}</p>}
-      <button className="btn btn-dark rounded-pill" type="submit">Enviar solicitud</button>
+      <button className="btn btn-dark rounded-pill" type="submit" disabled={enviando}>Enviar solicitud</button>
     </form>}
   </main>;
 }
