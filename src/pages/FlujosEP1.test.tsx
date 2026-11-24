@@ -57,7 +57,7 @@ describe('Vistas migradas de EP1', () => {
     await user.type(screen.getByLabelText(/motivo de consulta/i), 'Necesito conocer los requisitos');
     await user.type(screen.getByLabelText(/fecha preferida/i), '2099-12-30');
     await user.click(screen.getByRole('button', { name: /enviar solicitud/i }));
-    expect(screen.getByText('Solicitud enviada')).toBeInTheDocument();
+    expect(await screen.findByText('Solicitud enviada')).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: /ver mis solicitudes/i }));
     expect(screen.getByText('Enfermería')).toBeInTheDocument();
     expect(screen.getByText(/necesito conocer los requisitos/i)).toBeInTheDocument();
@@ -70,11 +70,11 @@ describe('Vistas migradas de EP1', () => {
     sesion('Orientador');
     mostrar('/orientador/solicitudes');
     await user.click(screen.getByRole('button', { name: /tomar solicitud/i }));
-    await user.click(screen.getByRole('link', { name: /gestionar orientación/i }));
+    await user.click(await screen.findByRole('link', { name: /gestionar orientación/i }));
     await user.selectOptions(screen.getByLabelText(/^estado$/i), 'ATENDIDA');
     await user.type(screen.getByLabelText(/resultado de orientación/i), 'Se entregó información sobre el programa');
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
-    expect(screen.getByText(/cambios guardados/i)).toBeInTheDocument();
+    expect(await screen.findByText(/cambios guardados/i)).toBeInTheDocument();
     expect(listarSolicitudes(localStorage)[0].estado).toBe('ATENDIDA');
     expect(listarNotificaciones(localStorage, estudiante.correo)).toHaveLength(3);
   });

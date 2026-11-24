@@ -15,12 +15,18 @@ function TarjetaSolicitud({ solicitud, rol, correo, cambiar }: {
   const [fecha, setFecha] = useState('');
   const [error, setError] = useState('');
   const activa = !['CANCELADA', 'ATENDIDA'].includes(solicitud.estado);
-  const accion = (tipo: 'TOMAR' | 'CANCELAR' | 'REPROGRAMAR') => {
+  const [enviando, setEnviando] = useState(false);
+  const accion = async (tipo: 'TOMAR' | 'CANCELAR' | 'REPROGRAMAR') => {
     const sesion = { correo, nombre: '', rol };
-    const resultado = tipo === 'REPROGRAMAR'
+    if (enviando) return;
+    setEnviando(true);
+    try {
+    const resultado = await (tipo === 'REPROGRAMAR'
       ? cambiar(solicitud.id, sesion, { tipo, fecha })
-      : cambiar(solicitud.id, sesion, { tipo });
+      : cambiar(solicitud.id, sesion, { tipo }));
     setError(resultado ? '' : 'No se pudo actualizar la solicitud. Verifica la fecha y el estado.');
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo actualizar.'); }
+    finally { setEnviando(false); }
   };
   return <article className="form-surface mb-3">
     <span className="pill-soft">{solicitud.estado}</span>
@@ -38,12 +44,12 @@ function TarjetaSolicitud({ solicitud, rol, correo, cambiar }: {
       <ul>{solicitud.historial.map((cambio, indice) => <li key={`${cambio.fecha}-${indice}`}>{cambio.estado} · {new Date(cambio.fecha).toLocaleString('es-CL')} · {cambio.actor}</li>)}</ul>
     </details>
     {rol === 'Orientador' && activa && (!solicitud.orientador ?
-      <button className="btn btn-dark btn-sm" onClick={() => accion('TOMAR')}>Tomar solicitud</button> :
+      <button className="btn btn-dark btn-sm" disabled={enviando} onClick={() => accion('TOMAR')}>Tomar solicitud</button> :
       <Link className="btn btn-dark btn-sm" to={`/orientador/solicitudes/${solicitud.id}`}>Gestionar orientación</Link>)}
     {rol === 'Estudiante' && activa && <div className="d-flex flex-wrap gap-2 align-items-center">
       <input className="form-control" style={{ maxWidth: 210 }} type="date" aria-label={`Nueva fecha para ${solicitud.oferta}`} value={fecha} onChange={(e) => setFecha(e.target.value)} />
-      <button className="btn btn-outline-dark btn-sm" onClick={() => accion('REPROGRAMAR')}>Solicitar reprogramación</button>
-      <button className="btn btn-outline-danger btn-sm" onClick={() => accion('CANCELAR')}>Cancelar solicitud</button>
+      <button className="btn btn-outline-dark btn-sm" disabled={enviando} onClick={() => accion('REPROGRAMAR')}>Solicitar reprogramación</button>
+      <button className="btn btn-outline-danger btn-sm" disabled={enviando} onClick={() => accion('CANCELAR')}>Cancelar solicitud</button>
     </div>}
     {error && <p role="alert" className="text-danger mt-2 mb-0">{error}</p>}
   </article>;
@@ -51,7 +57,7 @@ function TarjetaSolicitud({ solicitud, rol, correo, cambiar }: {
 
 export function Solicitudes() {
   const { sesion } = useSesion();
-  const { solicitudes, cambiar } = useOrientacion();
+  const { solicitudes, cambiar, cargando, error } = useOrientacion();
   const [estado, setEstado] = useState('');
   if (!sesion) return null;
   const visibles = solicitudes.filter((solicitud) => {
@@ -72,6 +78,6 @@ export function Solicitudes() {
       </select>
       {sesion.rol === 'Estudiante' && <Link to="/solicitar" className="btn btn-dark rounded-pill">Nueva solicitud</Link>}
     </div>
-    {visibles.length ? visibles.map((solicitud) => <TarjetaSolicitud key={solicitud.id} solicitud={solicitud} rol={sesion.rol} correo={sesion.correo} cambiar={cambiar} />) : <p>No hay solicitudes para esta vista.</p>}
+    {cargando ? <p role="status">Cargando solicitudes...</p> : error ? <p role="alert">{error}</p> : visibles.length ? visibles.map((solicitud) => <TarjetaSolicitud key={solicitud.id} solicitud={solicitud} rol={sesion.rol} correo={sesion.correo} cambiar={cambiar} />) : <p>No hay solicitudes para esta vista.</p>}
   </main>;
 }

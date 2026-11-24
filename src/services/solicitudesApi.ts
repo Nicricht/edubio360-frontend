@@ -10,11 +10,15 @@ export interface SolicitudApi {
   orientadorEmail: string | null;
   createdAt: string;
   updatedAt: string;
-  historial: { estado: string; detalle: string }[];
+  historial: { estado: string; detalle: string; fecha: string }[];
+  resultado?: string | null;
+  observacion?: string | null;
+  ofertasComparadas?: number[];
 }
 
 export interface SolicitudEntrada {
   ofertaId: number;
+  ofertasComparadas?: number[];
   motivo: string;
   fechaHora: string;
 }
@@ -22,6 +26,9 @@ export interface SolicitudEntrada {
 export const solicitudesApi = {
   listar(token: string) {
     return apiRest<SolicitudApi[]>('/api/solicitudes', {}, token);
+  },
+  disponibles(token: string) {
+    return apiRest<SolicitudApi[]>('/api/solicitudes/disponibles', {}, token);
   },
   mias(token: string) {
     return apiRest<SolicitudApi[]>('/api/solicitudes/mias', {}, token);
@@ -37,6 +44,12 @@ export const solicitudesApi = {
   },
   confirmar(id: number, token: string) {
     return apiRest<SolicitudApi>('/api/solicitudes/' + id + '/confirmar', { method: 'PUT' }, token);
+  },
+  reprogramar(id: number, motivo: string, fechaHora: string, token: string) {
+    return apiRest<SolicitudApi>('/api/solicitudes/' + id + '/reprogramar', { method: 'PUT', body: JSON.stringify({ motivo, fechaHora }) }, token);
+  },
+  gestionar(id: number, datos: { estado: string; fechaHora?: string; resultado?: string; observacion?: string }, token: string) {
+    return apiRest<SolicitudApi>('/api/solicitudes/' + id + '/gestionar', { method: 'PUT', body: JSON.stringify(datos) }, token);
   },
   cancelar(id: number, token: string) {
     return apiRest<SolicitudApi>('/api/solicitudes/' + id + '/cancelar', { method: 'PUT' }, token);
