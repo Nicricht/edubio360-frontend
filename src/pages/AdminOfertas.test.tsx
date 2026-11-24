@@ -64,7 +64,7 @@ describe('Administración de ofertas (CRUD visual)', () => {
     await user.type(screen.getByLabelText(/^arancel/i), '1800000');
     await user.type(screen.getByLabelText(/^descripción$/i), 'Programa de demostración para EP2.');
     await user.click(screen.getByRole('button', { name: /guardar oferta/i }));
-    expect(screen.getByText('Técnico en Redes')).toBeInTheDocument();
+    expect(await screen.findByText('Técnico en Redes')).toBeInTheDocument();
     expect(screen.getAllByTestId('admin-oferta-row')).toHaveLength(22);
   }, 15000);
 
@@ -75,7 +75,7 @@ describe('Administración de ofertas (CRUD visual)', () => {
     await user.clear(carrera);
     await user.type(carrera, 'Informática Actualizada');
     await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
-    expect(screen.getByText('Informática Actualizada')).toBeInTheDocument();
+    expect(await screen.findByText('Informática Actualizada')).toBeInTheDocument();
   });
 
   it('permite actualizar los cupos disponibles de una oferta original', async () => {
