@@ -24,6 +24,30 @@ describe('Autenticación REST', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ id: 2, email: 's@example.test', role: 'STUDENT', active: true })));
     expect((await recuperarReal(sessionStorage))?.rol).toBe('Estudiante');
   });
+  it('renueva un JWT próximo a vencer y conserva solo el nuevo', async () => {
+    const token = 'header.' + btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 120 })) + '.signature';
+    sessionStorage.setItem('edubio360:jwt', token);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response({ id: 2, email: 's@example.test', role: 'STUDENT', active: true }))
+      .mockResolvedValueOnce(response({ token: 'nuevo-jwt', email: 's@example.test', role: 'STUDENT' }));
+    vi.stubGlobal('fetch', fetchMock);
+    expect((await recuperarReal(sessionStorage))?.token).toBe('nuevo-jwt');
+    expect(sessionStorage.getItem('edubio360:jwt')).toBe('nuevo-jwt');
+    expect(fetchMock.mock.calls[1][0]).toContain('/api/auth/refresh');
+    expect(fetchMock.mock.calls[1][1].headers.get('Authorization')).toBe('Bearer ' + token);
+  });
+  it('no vuelve a iniciar sesión si el usuario salió durante una renovación', async () => {
+    const token = 'header.' + btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 120 })) + '.signature';
+    sessionStorage.setItem('edubio360:jwt', token);
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(response({ id: 2, email: 's@example.test', role: 'STUDENT', active: true }))
+      .mockImplementationOnce(async () => {
+        salirReal(sessionStorage);
+        return response({ token: 'nuevo-jwt', email: 's@example.test', role: 'STUDENT' });
+      }));
+    expect(await recuperarReal(sessionStorage)).toBeNull();
+    expect(sessionStorage.getItem('edubio360:jwt')).toBeNull();
+  });
   it('elimina el token vencido sin recurrir a una sesión simulada', async () => {
     sessionStorage.setItem('edubio360:jwt', 'vencido');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ message: 'Vencido' }, 401)));
